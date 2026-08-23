@@ -1,0 +1,23 @@
+# Node
+node_modules/
+dist/
+*.local
+
+# Vite
+.vite/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+
+# Editor/OS
+.DS_Store
+.vscode/
+.idea/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*

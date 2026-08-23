@@ -1,0 +1,129 @@
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #fdf8f4;
+  --surface: #ffffff;
+  --border: #e8e0d8;
+  --primary: #8b5e3c;
+  --primary-light: #c4956a;
+  --text: #3d2b1f;
+  --text-muted: #8a7060;
+  --success: #4a7c59;
+  --danger: #c44b4b;
+  --radius: 8px;
+  --shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  font-size: 15px;
+}
+
+/* ── Shared component primitives ── */
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.1rem 1.25rem;
+  box-shadow: var(--shadow);
+}
+
+.card-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin-bottom: 0.9rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.hint {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+/* ── Buttons ── */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.38rem 0.85rem;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 500;
+  line-height: 1;
+  transition: opacity 0.15s, transform 0.1s;
+}
+.btn:active { transform: scale(0.97); }
+
+.btn-primary { background: var(--primary); color: white; }
+.btn-primary:hover { opacity: 0.88; }
+
+.btn-ghost { background: transparent; color: var(--text-muted); border: 1px solid var(--border); }
+.btn-ghost:hover { background: var(--bg); color: var(--text); }
+
+.btn-danger { background: #fee2e2; color: var(--danger); }
+.btn-danger:hover { background: #fecaca; }
+
+/* ── Icon delete button ── */
+.del-btn {
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: 1rem;
+  line-height: 1;
+  padding: 0 0.15rem;
+  transition: color 0.1s;
+}
+.del-btn:hover { color: var(--danger); }
+
+/* ── Badges ── */
+.badge {
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+.badge-hard  { background: #fdf0e8; color: var(--primary); }
+.badge-soft  { background: #e8f4ed; color: var(--success); }
+.badge-apart { background: #fee2e2; color: var(--danger); }
+
+/* ── Member tag ── */
+.member-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: #f0ebe5;
+  color: var(--text);
+  padding: 0.18rem 0.45rem;
+  border-radius: 12px;
+  font-size: 0.8rem;
+}
+.member-tag button {
+  border: none; background: none; cursor: pointer;
+  color: var(--text-muted); line-height: 1; padding: 0; font-size: 0.9rem;
+}
+.member-tag button:hover { color: var(--danger); }
+
+/* ── Spinner ── */
+.spinner {
+  display: inline-block;
+  width: 0.85em; height: 0.85em;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.65s linear infinite;
+  vertical-align: middle;
+  margin-right: 0.35rem;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
