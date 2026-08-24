@@ -117,8 +117,8 @@ function doImport() {
 <template>
   <div class="csv-panel">
     <p class="hint">
-      Not sure how to format your file? See the "CSV Format" tab above for column names and an
-      example.
+      Not sure how to format your file? See the "CSV Format" section of the Guide tab for column
+      names and an example.
     </p>
 
     <label class="btn btn-ghost file-btn">
