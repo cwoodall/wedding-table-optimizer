@@ -20,21 +20,21 @@ function removeGuest(i: number) {
 }
 
 function exportGuestList() {
-  // Best-effort "Group" column so a hard ("must sit together") group round-trips
-  // through re-import; soft/apart preferences aren't representable in this column.
-  const groupLabel = new Map<string, string>();
-  store.groups.forEach((g, gi) => {
-    if (g.weight >= 1.0) {
-      const label = `Group ${gi + 1}`;
-      for (const m of g.members) {
-        if (!groupLabel.has(m)) groupLabel.set(m, label);
-      }
-    }
-  });
+  // One column per relationship group so every group (hard, soft, or apart) round-trips
+  // through re-import. The weight isn't stored in the CSV data itself — it's shown in the
+  // header as a reminder to set on that column in the import panel.
+  const headerRow = [
+    'Guest Name',
+    ...store.groups.map((g, gi) => `Group ${gi + 1} (weight ${g.weight.toFixed(1)})`),
+  ];
 
-  const rows: string[][] = [['Guest Name', 'Group']];
+  const rows: string[][] = [headerRow];
   for (const name of store.validGuests) {
-    rows.push([name, groupLabel.get(name) ?? '']);
+    const row = [name];
+    store.groups.forEach((g, gi) => {
+      row.push(g.members.includes(name) ? `Group ${gi + 1}` : '');
+    });
+    rows.push(row);
   }
   downloadCSV('guest-list.csv', rows);
 }

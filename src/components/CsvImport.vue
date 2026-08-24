@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { usePlannerStore } from '../stores/planner';
-import { parseCSV, buildGuestsAndGroups } from '../utils/csv';
+import { parseCSV, buildGuestsAndGroups, extractWeightFromHeader, type CsvGroupColumn } from '../utils/csv';
 
 const store = usePlannerStore();
 
@@ -10,16 +10,31 @@ const fileName = ref('');
 const headers = ref<string[]>([]);
 const dataRows = ref<string[][]>([]);
 const nameCol = ref('');
-const relCol = ref('');
+const groupCols = ref<CsvGroupColumn[]>([]);
 const errorMsg = ref('');
 const successMsg = ref('');
+
+function addGroupCol() {
+  groupCols.value.push({ column: '', weight: 1.0 });
+}
+
+function removeGroupCol(i: number) {
+  groupCols.value.splice(i, 1);
+}
+
+/** If the chosen column's header carries a weight (e.g. "Friend Group (weight 0.6)"),
+ *  fill it in automatically; otherwise leave whatever weight is already set. */
+function onGroupColChange(gc: CsvGroupColumn) {
+  const weight = extractWeightFromHeader(gc.column);
+  if (weight !== null) gc.weight = weight;
+}
 
 function resetParsed() {
   headers.value = [];
   dataRows.value = [];
   fileName.value = '';
   nameCol.value = '';
-  relCol.value = '';
+  groupCols.value = [];
   if (fileInput.value) fileInput.value.value = '';
 }
 
@@ -53,7 +68,10 @@ function onFileChange(e: Event) {
     dataRows.value = rows.slice(1).filter(r => r.some(cell => cell.trim() !== ''));
 
     nameCol.value = findHeader(['guest name']) || headers.value[0] || '';
-    relCol.value = findHeader(['group', 'relationship', 'relationship group', 'household']);
+
+    const defaultGroupCol = findHeader(['group', 'relationship', 'relationship group', 'household']);
+    const defaultWeight = defaultGroupCol ? extractWeightFromHeader(defaultGroupCol) ?? 1.0 : 1.0;
+    groupCols.value = [{ column: defaultGroupCol, weight: defaultWeight }];
   };
   reader.onerror = () => {
     errorMsg.value = 'Could not read that file.';
@@ -69,7 +87,7 @@ function doImport() {
     return;
   }
   try {
-    const result = buildGuestsAndGroups(headers.value, dataRows.value, nameCol.value, relCol.value);
+    const result = buildGuestsAndGroups(headers.value, dataRows.value, nameCol.value, groupCols.value);
     if (result.guests.length === 0) {
       errorMsg.value = 'No guest names found in that column.';
       return;
@@ -110,26 +128,43 @@ function doImport() {
     <span v-if="fileName" class="file-name">{{ fileName }}</span>
 
     <template v-if="headers.length">
-      <div class="csv-cols">
-        <label>
-          Guest name column
-          <select v-model="nameCol">
-            <option v-for="h in headers" :key="h" :value="h">{{ h }}</option>
-          </select>
-        </label>
-        <label>
-          Relationship column <span class="optional">(optional)</span>
-          <select v-model="relCol">
-            <option value="">(none)</option>
-            <option v-for="h in headers" :key="h" :value="h">{{ h }}</option>
-          </select>
-        </label>
+      <label class="name-col">
+        Guest name column
+        <select v-model="nameCol">
+          <option v-for="h in headers" :key="h" :value="h">{{ h }}</option>
+        </select>
+      </label>
+
+      <div class="group-cols">
+        <div class="group-cols-hdr">
+          <span>Group columns <span class="optional">(optional)</span></span>
+          <button class="btn btn-ghost" @click="addGroupCol">+ Add group column</button>
+        </div>
+
+        <p class="hint">
+          Guests sharing the same value in a group column are grouped together at that column's
+          weight: 1.0+ must sit together, 0&ndash;1 prefer together, negative prefer apart. If a
+          column's header includes a weight (e.g. "Friend Group (weight 0.6)"), it's filled in
+          automatically when you pick that column &mdash; you can still edit it.
+        </p>
+
+        <div v-for="(gc, gi) in groupCols" :key="gi" class="group-col-row">
+          <label>
+            Column
+            <select v-model="gc.column" @change="onGroupColChange(gc)">
+              <option value="">(none)</option>
+              <option v-for="h in headers" :key="h" :value="h">{{ h }}</option>
+            </select>
+          </label>
+          <label>
+            Weight
+            <input type="number" v-model.number="gc.weight" step="0.1" min="-2" max="2" />
+          </label>
+          <button class="del-btn" @click="removeGroupCol(gi)" title="Remove group column">✕</button>
+        </div>
       </div>
 
-      <p class="hint">
-        {{ dataRows.length }} row(s) detected. Guests sharing the same value in the relationship
-        column are imported as a "must sit together" group.
-      </p>
+      <p class="hint">{{ dataRows.length }} row(s) detected.</p>
 
       <button class="btn btn-primary" @click="doImport">Import {{ dataRows.length }} row(s)</button>
     </template>
@@ -153,19 +188,16 @@ function doImport() {
 
 .file-name { font-size: 0.8rem; color: var(--text-muted); margin-left: 0.5rem; }
 
-.csv-cols {
-  display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
-}
-.csv-cols label {
+.name-col,
+.group-col-row label {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
   font-size: 0.78rem;
   color: var(--text-muted);
 }
-.csv-cols select {
+
+select, input[type='number'] {
   padding: 0.32rem 0.6rem;
   border: 1px solid var(--border);
   border-radius: 5px;
@@ -173,8 +205,34 @@ function doImport() {
   color: var(--text);
   background: white;
 }
-.csv-cols select:focus { outline: none; border-color: var(--primary-light); }
+select:focus, input[type='number']:focus { outline: none; border-color: var(--primary-light); }
 .optional { font-weight: 400; }
+
+.group-cols {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: white;
+}
+.group-cols-hdr {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.group-col-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.5rem;
+}
+.group-col-row label:first-child { flex: 1; }
+.group-col-row input[type='number'] { width: 72px; }
 
 .csv-msg { font-size: 0.8rem; }
 .csv-error { color: var(--danger); }

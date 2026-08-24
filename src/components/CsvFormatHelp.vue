@@ -2,13 +2,13 @@
 import { downloadCSV } from '../utils/csv';
 
 const exampleRows: string[][] = [
-  ['Guest Name', 'Group'],
-  ['Alex Rivera', 'Rivera Family'],
-  ['Jordan Rivera', 'Rivera Family'],
-  ['Casey Kim', 'Kim Family'],
-  ['Morgan Kim', 'Kim Family'],
-  ['Taylor Chen', ''],
-  ['Sam Patel', ''],
+  ['Guest Name', 'Family Group', 'Friend Group'],
+  ['Alex Rivera', 'Rivera Family', ''],
+  ['Jordan Rivera', 'Rivera Family', ''],
+  ['Casey Kim', 'Kim Family', 'College Crew'],
+  ['Morgan Kim', 'Kim Family', ''],
+  ['Taylor Chen', '', 'College Crew'],
+  ['Sam Patel', '', 'College Crew'],
 ];
 
 const exampleCSV = exampleRows.map(r => r.join(',')).join('\n');
@@ -28,33 +28,64 @@ function downloadExample() {
 
       <p class="hint intro">
         The importer (Guests &amp; Tables &rarr; Import from CSV) reads a plain CSV file with a
-        header row. You tell it which column holds guest names and, optionally, which column
-        groups guests together &mdash; the column names don't have to match exactly what's shown
-        here, you type in whatever your file uses.
+        header row. After you choose a file, you pick which column holds guest names and, from a
+        dropdown of your file's actual columns, which column(s) group guests together &mdash;
+        the column names in your file can be anything, you just select them from the list.
       </p>
 
       <h3>1. Guest name column</h3>
       <p class="hint">
-        One row per guest. The default column name the importer looks for is
-        <code>Guest Name</code>, but you can change it in the import panel to match your file
-        (matching ignores case and surrounding spaces). Rows with a blank name are skipped, and
-        duplicate names (after the first) are skipped too.
+        One row per guest. The importer defaults to a column named
+        <code>Guest Name</code> if it finds one, otherwise the first column &mdash; you can pick
+        a different one from the dropdown. Rows with a blank name are skipped, and duplicate
+        names (after the first) are skipped too.
       </p>
 
-      <h3>2. Relationship / group column (optional)</h3>
+      <h3>2. Group columns (optional, any number)</h3>
       <p class="hint">
-        The default column name is <code>Group</code>. Guests who share the exact same, non-blank
-        value in this column are imported as a <strong>must sit together</strong> group (a hard
-        constraint, same as setting weight&nbsp;1.0 on the Relationships tab). Leave the cell
-        blank for a guest with no group tie &mdash; blank values are never grouped together.
+        A group column is any column in your file where guests who share the exact same,
+        non-blank value should be grouped together &mdash; e.g. a "Family Group" or
+        "Household" column. Leave a cell blank for a guest with no tie in that column;
+        blanks are never grouped.
       </p>
       <p class="hint">
-        This column can only express "must sit together" groups. "Prefer together" and
-        "prefer apart" relationships aren't representable in the CSV &mdash; add those afterward
-        on the Relationships tab.
+        You're not limited to one. Click <strong>+ Add group column</strong> in the import panel
+        once for each grouping your file contains, so you can capture more than one kind of
+        relationship at the same time &mdash; e.g. a "Family Group" column for hard seating
+        requirements and a separate "Friend Group" column for softer preferences.
       </p>
 
-      <h3>3. Example</h3>
+      <h3>3. Setting each group column's weight</h3>
+      <p class="hint">
+        The weight is <strong>not</strong> a value you put in a cell &mdash; it's a setting that
+        applies to the whole group column, once per group column. After you pick a file:
+      </p>
+      <ol class="hint gotchas gotchas-ol">
+        <li>Click <strong>+ Add group column</strong> (one row appears per group column).</li>
+        <li>In that row's <strong>Column</strong> dropdown, pick the CSV column to group by.</li>
+        <li>
+          The <strong>Weight</strong> field right next to it fills in automatically if the
+          column's header carries a weight (see below) &mdash; otherwise it defaults to
+          <code>1.0</code>. You can always type a different value.
+        </li>
+      </ol>
+      <p class="hint">
+        <strong>Header shortcut:</strong> if a column's header includes the word "weight"
+        followed by a number, e.g. <code>Friend Group (weight 0.6)</code> or
+        <code>Family Group (weight: 1.0)</code>, that number is used as the weight the moment
+        you pick that column &mdash; no need to type it in. This is exactly the format
+        "Export CSV" produces, so a file you export and later re-import will have its weights
+        filled in for you automatically.
+      </p>
+      <p class="hint">
+        The weight number controls how strongly guests in the same group are seated together:
+        <strong>1.0 or higher</strong> means <strong>must sit together</strong> (a hard
+        constraint), <strong>0 to 1</strong> means <strong>prefer together</strong> (a soft
+        nudge), and <strong>negative</strong> means <strong>prefer apart</strong>. Repeat steps
+        1&ndash;3 for each additional group column, giving each its own weight.
+      </p>
+
+      <h3>4. Example</h3>
       <div class="table-wrap">
         <table class="example-table">
           <thead>
@@ -71,11 +102,13 @@ function downloadExample() {
       </div>
       <pre class="csv-raw">{{ exampleCSV }}</pre>
       <p class="hint">
-        Here, the two Riveras are seated together, the two Kims are seated together, and Taylor
-        and Sam have no group tie.
+        To import this file: add one group column set to "Family Group" with weight
+        <code>1.0</code> (seats the two Riveras together and the two Kims together), and a second
+        group column set to "Friend Group" with weight <code>0.6</code> (nudges Casey, Taylor,
+        and Sam toward the same table without forcing it).
       </p>
 
-      <h3>4. A few gotchas</h3>
+      <h3>5. A few gotchas</h3>
       <ul class="hint gotchas">
         <li>The first row must be a header row with column names.</li>
         <li>Blank rows are ignored.</li>
@@ -132,4 +165,5 @@ code {
 
 .gotchas { padding-left: 1.1rem; display: flex; flex-direction: column; gap: 0.3rem; }
 .gotchas li { list-style: disc; }
+.gotchas-ol li { list-style: decimal; }
 </style>

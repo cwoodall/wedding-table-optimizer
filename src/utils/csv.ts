@@ -64,26 +64,52 @@ export interface CsvImportResult {
 }
 
 /**
- * Builds a guest list and "must sit together" groups from parsed CSV rows.
- * Guests that share the same non-empty value in the relationship column are
- * grouped as a hard constraint (weight 1.0).
+ * Pulls a weight out of a column header, e.g. "Family Group (weight 1.0)" or
+ * "Friend Group (weight: 0.6)" -> 0.6. Matches the format produced by "Export
+ * CSV". Returns null if the header has no recognizable weight.
+ */
+export function extractWeightFromHeader(header: string): number | null {
+  const match = header.match(/weight\s*[:=]?\s*(-?\d+(?:\.\d+)?)/i);
+  if (!match) return null;
+  const weight = Number(match[1]);
+  return Number.isFinite(weight) ? weight : null;
+}
+
+export interface CsvGroupColumn {
+  /** CSV header holding the grouping value (e.g. "Family Group"). */
+  column: string;
+  /** Weight applied to every group formed from this column: >=1.0 must sit
+   *  together, 0-1 prefer together, negative prefer apart. */
+  weight: number;
+}
+
+/**
+ * Builds a guest list from parsed CSV rows, plus relationship groups from any
+ * number of group columns. Within a single group column, guests that share
+ * the same non-empty value become one group at that column's weight. Group
+ * columns are independent of each other, so the same value in two different
+ * columns (e.g. two "Smith" households) does not merge across columns.
  */
 export function buildGuestsAndGroups(
   headers: string[],
   dataRows: string[][],
   nameCol: string,
-  relCol: string,
+  groupCols: CsvGroupColumn[],
 ): CsvImportResult {
   const norm = (s: string) => s.trim().toLowerCase();
   const nameIdx = headers.findIndex(h => norm(h) === norm(nameCol));
   if (nameIdx === -1) {
     throw new Error(`Column "${nameCol}" not found in the CSV headers.`);
   }
-  const relIdx = relCol.trim() ? headers.findIndex(h => norm(h) === norm(relCol)) : -1;
+
+  const resolvedGroupCols = groupCols
+    .filter(gc => gc.column.trim())
+    .map(gc => ({ idx: headers.findIndex(h => norm(h) === norm(gc.column)), weight: gc.weight }))
+    .filter(gc => gc.idx !== -1);
 
   const guests: string[] = [];
   const seen = new Set<string>();
-  const relMap = new Map<string, string[]>();
+  const relMaps = resolvedGroupCols.map(() => new Map<string, string[]>());
   let duplicateCount = 0;
   let blankNameCount = 0;
 
@@ -94,20 +120,22 @@ export function buildGuestsAndGroups(
     seen.add(rawName);
     guests.push(rawName);
 
-    if (relIdx !== -1) {
-      const relVal = (row[relIdx] ?? '').trim();
+    resolvedGroupCols.forEach((gc, gi) => {
+      const relVal = (row[gc.idx] ?? '').trim();
       if (relVal) {
-        const bucket = relMap.get(relVal) ?? [];
+        const bucket = relMaps[gi].get(relVal) ?? [];
         bucket.push(rawName);
-        relMap.set(relVal, bucket);
+        relMaps[gi].set(relVal, bucket);
       }
-    }
+    });
   }
 
   const groups: RelationshipGroup[] = [];
-  for (const members of relMap.values()) {
-    if (members.length > 1) groups.push({ members, weight: 1.0 });
-  }
+  resolvedGroupCols.forEach((gc, gi) => {
+    for (const members of relMaps[gi].values()) {
+      if (members.length > 1) groups.push({ members, weight: gc.weight });
+    }
+  });
 
   return { guests, groups, duplicateCount, blankNameCount };
 }
