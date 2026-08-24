@@ -2,6 +2,7 @@ import { ref, computed, watch } from 'vue';
 import { defineStore } from 'pinia';
 import { DEFAULT_GUESTS, DEFAULT_TABLES, DEFAULT_GROUPS } from '../data/defaults';
 import { optimize } from '../algorithm/optimize';
+import { type ChartPrefs, defaultChartPrefs, loadChartPrefs, saveChartPrefs } from '../utils/chartPrefs';
 import type { RelationshipGroup, TableSpec, OptimizationResult } from '../types';
 
 const STORAGE_KEY = 'wedding-planner-v1';
@@ -11,6 +12,7 @@ interface PersistedState {
   tables: TableSpec[];
   groups: RelationshipGroup[];
   numOptions: number;
+  chartPrefs: ChartPrefs;
 }
 
 function cloneTables(tables: TableSpec[]): TableSpec[] {
@@ -61,6 +63,9 @@ export const usePlannerStore = defineStore('planner', () => {
     if (Array.isArray(data.tables)) tables.value = normalizeTables(data.tables);
     if (Array.isArray(data.groups)) groups.value = data.groups;
     if (typeof data.numOptions === 'number') numOptions.value = data.numOptions;
+    if (data.chartPrefs && typeof data.chartPrefs === 'object') {
+      saveChartPrefs({ ...defaultChartPrefs(), ...data.chartPrefs });
+    }
   }
 
   function loadFromStorage(): void {
@@ -79,6 +84,7 @@ export const usePlannerStore = defineStore('planner', () => {
       tables: tables.value,
       groups: groups.value,
       numOptions: numOptions.value,
+      chartPrefs: loadChartPrefs(),
     };
   }
 
