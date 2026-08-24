@@ -8,6 +8,7 @@ import ResultsView from './components/ResultsView.vue';
 import CsvFormatHelp from './components/CsvFormatHelp.vue';
 import HelpGuide from './components/HelpGuide.vue';
 import { downloadJSON } from './utils/download';
+import { resetChartPrefs } from './utils/chartPrefs';
 
 type Tab = 'guide' | 'setup' | 'relationships' | 'results' | 'csv-help';
 
@@ -19,6 +20,11 @@ onMounted(() => store.loadFromStorage());
 
 function goToResults() {
   activeTab.value = 'results';
+}
+
+function resetToDefaults() {
+  store.resetToDefaults();
+  resetChartPrefs();
 }
 
 function exportJson() {
@@ -62,7 +68,7 @@ function onImportJson(e: Event) {
         <input ref="jsonFileInput" type="file" accept=".json,application/json" hidden @change="onImportJson" />
       </label>
       <button class="btn btn-ghost" @click="exportJson">Export JSON</button>
-      <button class="btn btn-ghost" @click="store.resetToDefaults()">Reset to defaults</button>
+      <button class="btn btn-ghost" @click="resetToDefaults">Reset to defaults</button>
     </span>
   </header>
 

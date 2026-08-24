@@ -1,8 +1,11 @@
 <script setup lang="ts">
+import { ref } from 'vue';
 import { usePlannerStore } from '../stores/planner';
 import { downloadCSV } from '../utils/csv';
+import SeatingChartModal from './SeatingChartModal.vue';
 
 const store = usePlannerStore();
+const chartOptionIdx = ref<number | null>(null);
 
 function totalSeated(optIdx: number): number {
   return store.results?.[optIdx].seating.tableList
@@ -55,6 +58,7 @@ function exportOption(optIdx: number) {
           <h3>Option {{ ri + 1 }}</h3>
           <span class="result-header-actions">
             <span class="score-chip">score {{ opt.score.toFixed(2) }}</span>
+            <button class="btn btn-ghost export-btn" @click="chartOptionIdx = ri">Seating Chart PDF</button>
             <button class="btn btn-ghost export-btn" @click="exportOption(ri)">Export CSV</button>
           </span>
         </div>
@@ -103,6 +107,12 @@ function exportOption(optIdx: number) {
     <div v-else-if="!store.running && !store.results" class="no-results">
       Press "Run Optimization" to generate seating arrangements.
     </div>
+
+    <SeatingChartModal
+      v-if="chartOptionIdx !== null && store.results?.[chartOptionIdx]"
+      :option="store.results[chartOptionIdx]"
+      @close="chartOptionIdx = null"
+    />
   </div>
 </template>
 

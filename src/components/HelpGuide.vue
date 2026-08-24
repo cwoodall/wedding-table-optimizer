@@ -84,6 +84,11 @@ defineEmits<{ 'go-to-tab': [tab: 'setup' | 'relationships' | 'results' | 'csv-he
           option, so you can see exactly what was traded off.
         </li>
         <li>Happy with an option? Use its <strong>Export CSV</strong> button to download the table assignments.</li>
+        <li>
+          Or click <strong>Seating Chart PDF</strong> for a printable chart &mdash; pick a title,
+          font, and colors, then use your browser's print dialog to save it as a PDF. It prints an
+          alphabetical guest list (with each guest's table) and a by-table guest list.
+        </li>
       </ul>
       <p class="hint">
         Not the result you wanted? Go back and adjust groups, table sizes, or the guest list, then
