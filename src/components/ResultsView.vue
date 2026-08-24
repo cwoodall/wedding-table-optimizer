@@ -1,11 +1,25 @@
 <script setup lang="ts">
 import { usePlannerStore } from '../stores/planner';
+import { downloadCSV } from '../utils/csv';
 
 const store = usePlannerStore();
 
 function totalSeated(optIdx: number): number {
   return store.results?.[optIdx].seating.tableList
     .reduce((s, t) => s + t.guests.length, 0) ?? 0;
+}
+
+function exportOption(optIdx: number) {
+  const opt = store.results?.[optIdx];
+  if (!opt) return;
+
+  const rows: string[][] = [['Guest Name', 'Table Number', 'Table Capacity']];
+  for (const t of opt.seating.tableList) {
+    for (const name of t.guests) {
+      rows.push([name, String(t.tableNum), String(t.capacity)]);
+    }
+  }
+  downloadCSV(`seating-option-${optIdx + 1}.csv`, rows);
 }
 </script>
 
@@ -39,7 +53,10 @@ function totalSeated(optIdx: number): number {
       <div v-for="(opt, ri) in store.results" :key="ri" class="result-option">
         <div class="result-header">
           <h3>Option {{ ri + 1 }}</h3>
-          <span class="score-chip">score {{ opt.score.toFixed(2) }}</span>
+          <span class="result-header-actions">
+            <span class="score-chip">score {{ opt.score.toFixed(2) }}</span>
+            <button class="btn btn-ghost export-btn" @click="exportOption(ri)">Export CSV</button>
+          </span>
         </div>
 
         <div class="result-summary">
@@ -157,6 +174,7 @@ function totalSeated(optIdx: number): number {
   justify-content: space-between;
 }
 .result-header h3 { font-size: 0.95rem; font-weight: 600; color: var(--primary); }
+.result-header-actions { display: flex; align-items: center; gap: 0.6rem; }
 .score-chip {
   font-size: 0.78rem;
   color: var(--text-muted);
@@ -165,6 +183,7 @@ function totalSeated(optIdx: number): number {
   border-radius: 10px;
   padding: 0.15rem 0.5rem;
 }
+.export-btn { font-size: 0.78rem; padding: 0.25rem 0.65rem; }
 
 .result-summary {
   padding: 0.5rem 1.1rem;

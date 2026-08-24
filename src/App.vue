@@ -5,8 +5,9 @@ import GuestList from './components/GuestList.vue';
 import TableConfig from './components/TableConfig.vue';
 import RelationshipGroups from './components/RelationshipGroups.vue';
 import ResultsView from './components/ResultsView.vue';
+import CsvFormatHelp from './components/CsvFormatHelp.vue';
 
-type Tab = 'setup' | 'relationships' | 'results';
+type Tab = 'setup' | 'relationships' | 'results' | 'csv-help';
 
 const store = usePlannerStore();
 const activeTab = ref<Tab>('setup');
@@ -39,6 +40,9 @@ function goToResults() {
     <button class="tab-btn" :class="{ active: activeTab === 'results' }" @click="activeTab = 'results'">
       Run &amp; Results
     </button>
+    <button class="tab-btn" :class="{ active: activeTab === 'csv-help' }" @click="activeTab = 'csv-help'">
+      CSV Format
+    </button>
   </nav>
 
   <main class="content">
@@ -48,6 +52,7 @@ function goToResults() {
     </div>
     <RelationshipGroups v-else-if="activeTab === 'relationships'" />
     <ResultsView v-else-if="activeTab === 'results'" @go-to-results="goToResults" />
+    <CsvFormatHelp v-else-if="activeTab === 'csv-help'" />
   </main>
 </template>
 

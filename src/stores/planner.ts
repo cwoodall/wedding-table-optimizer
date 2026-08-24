@@ -45,6 +45,13 @@ export const usePlannerStore = defineStore('planner', () => {
     }
   }
 
+  function applyImportedGuests(newGuests: string[], newGroups: RelationshipGroup[]): void {
+    guests.value = newGuests;
+    groups.value = newGroups;
+    results.value = null;
+    error.value = null;
+  }
+
   function resetToDefaults(): void {
     guests.value = [...DEFAULT_GUESTS];
     tables.value = [...DEFAULT_TABLES];
@@ -100,6 +107,6 @@ export const usePlannerStore = defineStore('planner', () => {
     // Derived
     guestCount, totalSeats, validGuests, validCaps,
     // Actions
-    loadFromStorage, resetToDefaults, runOptimization,
+    loadFromStorage, resetToDefaults, applyImportedGuests, runOptimization,
   };
 });
