@@ -6,11 +6,12 @@ import TableConfig from './components/TableConfig.vue';
 import RelationshipGroups from './components/RelationshipGroups.vue';
 import ResultsView from './components/ResultsView.vue';
 import CsvFormatHelp from './components/CsvFormatHelp.vue';
+import HelpGuide from './components/HelpGuide.vue';
 
-type Tab = 'setup' | 'relationships' | 'results' | 'csv-help';
+type Tab = 'guide' | 'setup' | 'relationships' | 'results' | 'csv-help';
 
 const store = usePlannerStore();
-const activeTab = ref<Tab>('setup');
+const activeTab = ref<Tab>('guide');
 
 onMounted(() => store.loadFromStorage());
 
@@ -31,6 +32,9 @@ function goToResults() {
   </header>
 
   <nav>
+    <button class="tab-btn" :class="{ active: activeTab === 'guide' }" @click="activeTab = 'guide'">
+      Guide
+    </button>
     <button class="tab-btn" :class="{ active: activeTab === 'setup' }" @click="activeTab = 'setup'">
       Guests &amp; Tables
     </button>
@@ -46,7 +50,8 @@ function goToResults() {
   </nav>
 
   <main class="content">
-    <div v-if="activeTab === 'setup'" class="grid-2">
+    <HelpGuide v-if="activeTab === 'guide'" @go-to-tab="t => activeTab = t" />
+    <div v-else-if="activeTab === 'setup'" class="grid-2">
       <GuestList />
       <TableConfig />
     </div>
