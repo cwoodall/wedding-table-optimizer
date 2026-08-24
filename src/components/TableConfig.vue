@@ -4,7 +4,7 @@ import { usePlannerStore } from '../stores/planner';
 const store = usePlannerStore();
 
 function addTable() {
-  store.tables.push(8);
+  store.tables.push({ name: `Table ${store.tables.length + 1}`, capacity: 8 });
 }
 
 function removeTable(i: number) {
@@ -29,11 +29,17 @@ function removeTable(i: number) {
     </p>
 
     <div class="tables-list">
-      <div v-for="(_, i) in store.tables" :key="i" class="table-chip">
-        <label>T{{ i + 1 }}</label>
+      <div v-for="(t, i) in store.tables" :key="i" class="table-chip">
+        <input
+          type="text"
+          class="table-name"
+          v-model="t.name"
+          :placeholder="`Table ${i + 1}`"
+        />
         <input
           type="number"
-          v-model.number="store.tables[i]"
+          class="table-cap"
+          v-model.number="t.capacity"
           min="1"
           max="100"
         />
@@ -48,31 +54,32 @@ function removeTable(i: number) {
 
 .tables-list {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
+  flex-direction: column;
+  gap: 0.4rem;
 }
 
 .table-chip {
   display: flex;
   align-items: center;
-  gap: 0.35rem;
+  gap: 0.4rem;
   background: var(--bg);
   border: 1px solid var(--border);
   border-radius: 6px;
   padding: 0.3rem 0.5rem;
   font-size: 0.82rem;
 }
-.table-chip label { color: var(--text-muted); white-space: nowrap; }
-.table-chip input[type='number'] {
-  width: 48px;
-  padding: 0.18rem 0.3rem;
+.table-chip input {
+  padding: 0.28rem 0.5rem;
   border: 1px solid var(--border);
   border-radius: 4px;
   font-size: 0.875rem;
-  text-align: center;
+  color: var(--text);
+  background: white;
 }
-.table-chip input[type='number']:focus {
+.table-chip input:focus {
   outline: none;
   border-color: var(--primary-light);
 }
+.table-name { flex: 1; min-width: 0; }
+.table-cap { width: 56px; text-align: center; flex-shrink: 0; }
 </style>

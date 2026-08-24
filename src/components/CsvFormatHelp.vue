@@ -46,7 +46,9 @@ function downloadExample() {
         A group column is any column in your file where guests who share the exact same,
         non-blank value should be grouped together &mdash; e.g. a "Family Group" or
         "Household" column. Leave a cell blank for a guest with no tie in that column;
-        blanks are never grouped.
+        blanks are never grouped. The value itself (e.g. "Rivera Family") becomes that
+        group's name on the Relationships tab, so it stays recognizable after import instead
+        of showing up as "Group 1".
       </p>
       <p class="hint">
         You're not limited to one. Click <strong>+ Add group column</strong> in the import panel

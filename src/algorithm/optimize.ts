@@ -18,6 +18,7 @@ export function optimize(
   groups: RelationshipGroup[],
   caps: number[],
   numOptions: number,
+  tableNames: string[] = [],
 ): OptimizationResult[] {
   const W = buildMatrix(names, groups);
   const blocks = hardBlocks(W, HARD_THRESHOLD);
@@ -56,6 +57,6 @@ export function optimize(
     .slice(0, numOptions)
     .map(({ score, assign }) => ({
       score,
-      seating: describeSeating(names, W, caps, blocks, assign),
+      seating: describeSeating(names, W, caps, blocks, assign, tableNames),
     }));
 }

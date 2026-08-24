@@ -13,10 +13,10 @@ function exportOption(optIdx: number) {
   const opt = store.results?.[optIdx];
   if (!opt) return;
 
-  const rows: string[][] = [['Guest Name', 'Table Number', 'Table Capacity']];
+  const rows: string[][] = [['Guest Name', 'Table Name', 'Table Number', 'Table Capacity']];
   for (const t of opt.seating.tableList) {
     for (const name of t.guests) {
-      rows.push([name, String(t.tableNum), String(t.capacity)]);
+      rows.push([name, t.name, String(t.tableNum), String(t.capacity)]);
     }
   }
   downloadCSV(`seating-option-${optIdx + 1}.csv`, rows);
@@ -78,7 +78,7 @@ function exportOption(optIdx: number) {
         <div class="tables-grid">
           <div v-for="t in opt.seating.tableList" :key="t.tableNum" class="table-result">
             <div class="table-result-hdr">
-              Table {{ t.tableNum }} &nbsp;({{ t.guests.length }}/{{ t.capacity }})
+              {{ t.name }} &nbsp;({{ t.guests.length }}/{{ t.capacity }})
             </div>
             <ul>
               <li v-for="name in t.guests" :key="name">{{ name }}</li>

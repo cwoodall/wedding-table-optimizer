@@ -1,10 +1,17 @@
 export interface RelationshipGroup {
+  name?: string;
   members: string[];
   weight: number;
 }
 
+export interface TableSpec {
+  name: string;
+  capacity: number;
+}
+
 export interface TableSeating {
   tableNum: number;
+  name: string;
   capacity: number;
   guests: string[];
 }

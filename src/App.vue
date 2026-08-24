@@ -7,16 +7,44 @@ import RelationshipGroups from './components/RelationshipGroups.vue';
 import ResultsView from './components/ResultsView.vue';
 import CsvFormatHelp from './components/CsvFormatHelp.vue';
 import HelpGuide from './components/HelpGuide.vue';
+import { downloadJSON } from './utils/download';
 
 type Tab = 'guide' | 'setup' | 'relationships' | 'results' | 'csv-help';
 
 const store = usePlannerStore();
 const activeTab = ref<Tab>('guide');
+const jsonFileInput = ref<HTMLInputElement | null>(null);
 
 onMounted(() => store.loadFromStorage());
 
 function goToResults() {
   activeTab.value = 'results';
+}
+
+function exportJson() {
+  downloadJSON('wedding-table-planner.json', store.exportState());
+}
+
+function onImportJson(e: Event) {
+  const input = e.target as HTMLInputElement;
+  const file = input.files?.[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const data = JSON.parse(String(reader.result ?? ''));
+      const ok = window.confirm(
+        'This will replace all current guests, tables, and groups with the contents of this file. Continue?',
+      );
+      if (ok) store.importState(data);
+    } catch {
+      window.alert('That file is not valid JSON.');
+    } finally {
+      if (jsonFileInput.value) jsonFileInput.value.value = '';
+    }
+  };
+  reader.readAsText(file);
 }
 </script>
 
@@ -28,7 +56,14 @@ function goToResults() {
       {{ store.tables.length }} tables &middot;
       {{ store.totalSeats }} seats
     </span>
-    <button class="btn btn-ghost reset-btn" @click="store.resetToDefaults()">Reset to defaults</button>
+    <span class="header-actions">
+      <label class="btn btn-ghost">
+        Import JSON
+        <input ref="jsonFileInput" type="file" accept=".json,application/json" hidden @change="onImportJson" />
+      </label>
+      <button class="btn btn-ghost" @click="exportJson">Export JSON</button>
+      <button class="btn btn-ghost" @click="store.resetToDefaults()">Reset to defaults</button>
+    </span>
   </header>
 
   <nav>
@@ -73,7 +108,8 @@ header {
 }
 h1 { font-size: 1.25rem; font-weight: 600; color: var(--primary); }
 .subtitle { font-size: 0.82rem; color: var(--text-muted); }
-.reset-btn { margin-left: auto; font-size: 0.8rem; }
+.header-actions { display: flex; gap: 0.5rem; margin-left: auto; }
+.header-actions .btn { font-size: 0.8rem; }
 
 nav {
   display: flex;

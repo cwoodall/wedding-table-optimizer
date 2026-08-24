@@ -4,7 +4,7 @@ import { usePlannerStore } from '../stores/planner';
 const store = usePlannerStore();
 
 function addGroup() {
-  store.groups.push({ members: [], weight: 1.0 });
+  store.groups.push({ name: '', members: [], weight: 1.0 });
 }
 
 function removeGroup(i: number) {
@@ -65,6 +65,12 @@ function badgeLabel(weight: number): string {
         :class="groupClass(grp.weight)"
       >
         <div class="group-top">
+          <input
+            type="text"
+            class="group-name"
+            v-model="grp.name"
+            :placeholder="`Group ${gi + 1}`"
+          />
           <span class="badge" :class="badgeClass(grp.weight)">{{ badgeLabel(grp.weight) }}</span>
 
           <div class="weight-row">
@@ -127,11 +133,23 @@ function badgeLabel(weight: number): string {
   margin-bottom: 0.5rem;
 }
 
+.group-name {
+  flex: 1;
+  min-width: 0;
+  padding: 0.28rem 0.55rem;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text);
+  background: white;
+}
+.group-name:focus { outline: none; border-color: var(--primary-light); }
+
 .weight-row {
   display: flex;
   align-items: center;
   gap: 0.4rem;
-  margin-left: auto;
 }
 .weight-row label { font-size: 0.78rem; color: var(--text-muted); }
 .weight-row input[type='number'] {

@@ -19,20 +19,25 @@ function removeGuest(i: number) {
   store.guests.splice(i, 1);
 }
 
+function groupLabel(g: { name?: string }, gi: number): string {
+  return g.name?.trim() || `Group ${gi + 1}`;
+}
+
 function exportGuestList() {
   // One column per relationship group so every group (hard, soft, or apart) round-trips
-  // through re-import. The weight isn't stored in the CSV data itself — it's shown in the
-  // header as a reminder to set on that column in the import panel.
+  // through re-import, using its name as both the header and the cell value. The weight
+  // isn't stored in the CSV data itself — it's shown in the header as a reminder, and gets
+  // picked up automatically when the column is selected during re-import.
   const headerRow = [
     'Guest Name',
-    ...store.groups.map((g, gi) => `Group ${gi + 1} (weight ${g.weight.toFixed(1)})`),
+    ...store.groups.map((g, gi) => `${groupLabel(g, gi)} (weight ${g.weight.toFixed(1)})`),
   ];
 
   const rows: string[][] = [headerRow];
   for (const name of store.validGuests) {
     const row = [name];
     store.groups.forEach((g, gi) => {
-      row.push(g.members.includes(name) ? `Group ${gi + 1}` : '');
+      row.push(g.members.includes(name) ? groupLabel(g, gi) : '');
     });
     rows.push(row);
   }

@@ -19,6 +19,7 @@ export function describeSeating(
   caps: number[],
   blocks: number[][],
   blockTable: number[],
+  tableNames: string[],
   threshold = 1.0,
 ): SeatingSolution {
   const tables: Record<number, number[]> = {};
@@ -28,11 +29,15 @@ export function describeSeating(
   });
 
   const tableList = Object.entries(tables)
-    .map(([t, guests]) => ({
-      tableNum: parseInt(t) + 1,
-      capacity: caps[parseInt(t)],
-      guests: guests.map(i => names[i]).sort(),
-    }))
+    .map(([t, guests]) => {
+      const idx = parseInt(t);
+      return {
+        tableNum: idx + 1,
+        name: tableNames[idx] ?? `Table ${idx + 1}`,
+        capacity: caps[idx],
+        guests: guests.map(i => names[i]).sort(),
+      };
+    })
     .sort((a, b) => a.tableNum - b.tableNum);
 
   const sameTable: Record<number, number> = {};

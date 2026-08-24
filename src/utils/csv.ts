@@ -1,4 +1,5 @@
 import type { RelationshipGroup } from '../types';
+import { triggerDownload } from './download';
 
 /** Minimal RFC 4180 CSV parser: handles quoted fields, escaped quotes, and CRLF/LF. */
 export function parseCSV(text: string): string[][] {
@@ -44,16 +45,7 @@ export function toCSV(rows: string[][]): string {
 
 /** Triggers a browser download of the given rows as a CSV file. */
 export function downloadCSV(filename: string, rows: string[][]): void {
-  const csv = toCSV(rows);
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  triggerDownload(filename, toCSV(rows), 'text/csv;charset=utf-8;');
 }
 
 export interface CsvImportResult {
@@ -132,8 +124,8 @@ export function buildGuestsAndGroups(
 
   const groups: RelationshipGroup[] = [];
   resolvedGroupCols.forEach((gc, gi) => {
-    for (const members of relMaps[gi].values()) {
-      if (members.length > 1) groups.push({ members, weight: gc.weight });
+    for (const [name, members] of relMaps[gi].entries()) {
+      if (members.length > 1) groups.push({ name, members, weight: gc.weight });
     }
   });
 

@@ -30,8 +30,9 @@ defineEmits<{ 'go-to-tab': [tab: 'setup' | 'relationships' | 'results' | 'csv-he
         </li>
         <li>Use <strong>Export CSV</strong> any time to save a backup of your current guest list.</li>
         <li>
-          In the Tables panel, set how many tables you have and how many seats each one holds,
-          using <strong>+ Add Table</strong> and the seat-count field on each table chip.
+          In the Tables panel, set how many tables you have, name each one (e.g. "Head Table" or
+          "Table 1"), and set how many seats it holds, using <strong>+ Add Table</strong> and the
+          name/seat-count fields on each table chip.
         </li>
         <li>
           Keep an eye on the seat count &mdash; you'll see a warning if you have more guests than
@@ -49,8 +50,8 @@ defineEmits<{ 'go-to-tab': [tab: 'setup' | 'relationships' | 'results' | 'csv-he
 
       <p class="hint">
         On the <strong>Relationships</strong> tab, click <strong>+ Add Group</strong> to create a
-        group, then add guests to it and set a <strong>weight</strong> that controls how strongly
-        they should be seated together:
+        group, give it a name if you'd like (e.g. "Rivera Family"), then add guests to it and set
+        a <strong>weight</strong> that controls how strongly they should be seated together:
       </p>
       <ul class="hint step-list">
         <li><strong>1.0 or higher &mdash; must sit together.</strong> A hard constraint, e.g. a couple, an immediate family, or a table that has to be exactly these people.</li>
@@ -87,6 +88,19 @@ defineEmits<{ 'go-to-tab': [tab: 'setup' | 'relationships' | 'results' | 'csv-he
       <p class="hint">
         Not the result you wanted? Go back and adjust groups, table sizes, or the guest list, then
         run again &mdash; nothing is final until you export it.
+      </p>
+    </div>
+
+    <div class="card step">
+      <div class="step-hdr">
+        <h3>Back up or restore everything</h3>
+      </div>
+      <p class="hint">
+        Your guests, tables, and groups are saved automatically in this browser as you go, but
+        that only covers this device. Use <strong>Export JSON</strong> in the header any time to
+        download a single file with your entire setup, and <strong>Import JSON</strong> to load
+        one back in &mdash; handy for switching computers or keeping a backup before making big
+        changes.
       </p>
     </div>
   </div>
