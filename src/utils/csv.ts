@@ -1,4 +1,4 @@
-import type { RelationshipGroup } from '../types';
+import type { RelationshipGroup, SeatingSolution, TableSeating } from '../types';
 import { triggerDownload } from './download';
 
 /** Minimal RFC 4180 CSV parser: handles quoted fields, escaped quotes, and CRLF/LF. */
@@ -130,4 +130,64 @@ export function buildGuestsAndGroups(
   });
 
   return { guests, groups, duplicateCount, blankNameCount };
+}
+
+/** Header row used by both `seatingToCsvRows` and `parseSeatingCsv`. */
+export const SEATING_CSV_HEADER = ['Guest Name', 'Table Name', 'Table Number', 'Table Capacity'];
+
+/** Flattens a seating solution into CSV rows (one row per seated guest) for export. */
+export function seatingToCsvRows(seating: SeatingSolution): string[][] {
+  const rows: string[][] = [SEATING_CSV_HEADER];
+  for (const t of seating.tableList) {
+    for (const name of t.guests) {
+      rows.push([name, t.name, String(t.tableNum), String(t.capacity)]);
+    }
+  }
+  return rows;
+}
+
+/**
+ * Parses a "Guest Name, Table Name, Table Number, Table Capacity" CSV (the
+ * format produced by "Export CSV") back into a seating solution, grouping
+ * guest rows by table number. Violations aren't recomputed — they only apply
+ * to a fresh optimization run — so both violation lists come back empty.
+ */
+export function parseSeatingCsv(rows: string[][]): SeatingSolution {
+  if (rows.length === 0) throw new Error('CSV file is empty.');
+  const norm = (s: string) => s.trim().toLowerCase();
+  const header = rows[0].map(norm);
+  const nameIdx = header.indexOf('guest name');
+  const tableNameIdx = header.indexOf('table name');
+  const tableNumIdx = header.indexOf('table number');
+  const capIdx = header.indexOf('table capacity');
+  if (nameIdx === -1 || tableNameIdx === -1 || tableNumIdx === -1) {
+    throw new Error('CSV must have "Guest Name", "Table Name", and "Table Number" columns.');
+  }
+
+  const tables = new Map<number, TableSeating>();
+  for (const row of rows.slice(1)) {
+    const name = (row[nameIdx] ?? '').trim();
+    if (!name) continue;
+    const tableNum = Number(row[tableNumIdx]);
+    if (!Number.isFinite(tableNum)) continue;
+    let t = tables.get(tableNum);
+    if (!t) {
+      t = {
+        tableNum,
+        name: (row[tableNameIdx] ?? '').trim() || `Table ${tableNum}`,
+        capacity: capIdx !== -1 ? Number(row[capIdx]) || 0 : 0,
+        guests: [],
+      };
+      tables.set(tableNum, t);
+    }
+    t.guests.push(name);
+  }
+
+  if (tables.size === 0) throw new Error('No guest rows found in the CSV.');
+
+  return {
+    tableList: [...tables.values()].sort((a, b) => a.tableNum - b.tableNum),
+    apartViolations: [],
+    splitSoft: [],
+  };
 }

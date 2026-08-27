@@ -3,7 +3,8 @@ import { defineStore } from 'pinia';
 import { DEFAULT_GUESTS, DEFAULT_TABLES, DEFAULT_GROUPS } from '../data/defaults';
 import { optimize } from '../algorithm/optimize';
 import { type ChartPrefs, defaultChartPrefs, loadChartPrefs, saveChartPrefs } from '../utils/chartPrefs';
-import type { RelationshipGroup, TableSpec, OptimizationResult } from '../types';
+import { type CardPrefs, defaultCardPrefs, loadCardPrefs, saveCardPrefs } from '../utils/cardPrefs';
+import type { RelationshipGroup, TableSpec, OptimizationResult, SeatingSolution, CardImage } from '../types';
 
 const STORAGE_KEY = 'wedding-planner-v1';
 
@@ -13,6 +14,21 @@ interface PersistedState {
   groups: RelationshipGroup[];
   numOptions: number;
   chartPrefs: ChartPrefs;
+  acceptedSeating: SeatingSolution | null;
+  cardPrefs: CardPrefs;
+  tableCardImages: Record<string, CardImage>;
+}
+
+function cloneSeating(seating: SeatingSolution): SeatingSolution {
+  return {
+    tableList: seating.tableList.map(t => ({ ...t, guests: [...t.guests] })),
+    apartViolations: seating.apartViolations.map(v => ({ ...v })),
+    splitSoft: seating.splitSoft.map(v => ({ ...v })),
+  };
+}
+
+function isSeatingSolution(v: unknown): v is SeatingSolution {
+  return !!v && typeof v === 'object' && Array.isArray((v as SeatingSolution).tableList);
 }
 
 function cloneTables(tables: TableSpec[]): TableSpec[] {
@@ -48,6 +64,8 @@ export const usePlannerStore = defineStore('planner', () => {
   const results = ref<OptimizationResult[] | null>(null);
   const running = ref(false);
   const error = ref<string | null>(null);
+  const acceptedSeating = ref<SeatingSolution | null>(null);
+  const tableCardImages = ref<Record<string, CardImage>>({});
 
   // Derived
   const guestCount = computed(() => guests.value.filter(g => g.trim()).length);
@@ -65,6 +83,14 @@ export const usePlannerStore = defineStore('planner', () => {
     if (typeof data.numOptions === 'number') numOptions.value = data.numOptions;
     if (data.chartPrefs && typeof data.chartPrefs === 'object') {
       saveChartPrefs({ ...defaultChartPrefs(), ...data.chartPrefs });
+    }
+    if (data.acceptedSeating === null) acceptedSeating.value = null;
+    else if (isSeatingSolution(data.acceptedSeating)) acceptedSeating.value = data.acceptedSeating;
+    if (data.cardPrefs && typeof data.cardPrefs === 'object') {
+      saveCardPrefs({ ...defaultCardPrefs(), ...data.cardPrefs });
+    }
+    if (data.tableCardImages && typeof data.tableCardImages === 'object') {
+      tableCardImages.value = data.tableCardImages;
     }
   }
 
@@ -85,6 +111,9 @@ export const usePlannerStore = defineStore('planner', () => {
       groups: groups.value,
       numOptions: numOptions.value,
       chartPrefs: loadChartPrefs(),
+      acceptedSeating: acceptedSeating.value,
+      cardPrefs: loadCardPrefs(),
+      tableCardImages: tableCardImages.value,
     };
   }
 
@@ -108,11 +137,41 @@ export const usePlannerStore = defineStore('planner', () => {
     numOptions.value = 3;
     results.value = null;
     error.value = null;
+    acceptedSeating.value = null;
+    tableCardImages.value = {};
     localStorage.removeItem(STORAGE_KEY);
   }
 
+  /** Marks one generated option as the accepted seating, snapshotting it so it
+   *  survives even after `results` is cleared by the next optimization run. */
+  function acceptResult(optIdx: number): void {
+    const opt = results.value?.[optIdx];
+    if (!opt) return;
+    acceptedSeating.value = cloneSeating(opt.seating);
+  }
+
+  function setAcceptedSeating(seating: SeatingSolution): void {
+    acceptedSeating.value = seating;
+  }
+
+  function clearAcceptedSeating(): void {
+    acceptedSeating.value = null;
+  }
+
+  /** Table-card decoration (emoji/monogram/upload) is per-table, keyed by table name,
+   *  so it's independent of any particular optimization run's table numbering. */
+  function setTableCardImage(tableName: string, image: CardImage): void {
+    tableCardImages.value = { ...tableCardImages.value, [tableName]: image };
+  }
+
+  function clearTableCardImage(tableName: string): void {
+    const next = { ...tableCardImages.value };
+    delete next[tableName];
+    tableCardImages.value = next;
+  }
+
   watch(
-    [guests, tables, groups, numOptions],
+    [guests, tables, groups, numOptions, acceptedSeating, tableCardImages],
     () => {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(exportState()));
     },
@@ -150,10 +209,12 @@ export const usePlannerStore = defineStore('planner', () => {
   return {
     // State
     guests, tables, groups, numOptions,
-    results, running, error,
+    results, running, error, acceptedSeating, tableCardImages,
     // Derived
     guestCount, totalSeats, validGuests, validTables, validCaps,
     // Actions
     loadFromStorage, resetToDefaults, applyImportedGuests, exportState, importState, runOptimization,
+    acceptResult, setAcceptedSeating, clearAcceptedSeating,
+    setTableCardImage, clearTableCardImage,
   };
 });

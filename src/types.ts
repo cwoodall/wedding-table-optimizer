@@ -32,3 +32,15 @@ export interface OptimizationResult {
   score: number;
   seating: SeatingSolution;
 }
+
+export type CardImageKind = 'none' | 'emoji' | 'monogram' | 'upload';
+
+/** A left-side card decoration. At most one of emoji/monogramText/uploadDataUrl
+ *  is meaningful, selected by `kind`; the others are left over from switching
+ *  kinds in the UI so the user's input isn't lost if they switch back. */
+export interface CardImage {
+  kind: CardImageKind;
+  emoji?: string;
+  monogramText?: string;
+  uploadDataUrl?: string;
+}

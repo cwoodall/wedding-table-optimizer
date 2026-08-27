@@ -8,6 +8,7 @@ import ResultsView from './components/ResultsView.vue';
 import HelpGuide from './components/HelpGuide.vue';
 import { downloadJSON } from './utils/download';
 import { resetChartPrefs } from './utils/chartPrefs';
+import { resetCardPrefs } from './utils/cardPrefs';
 
 type Tab = 'guide' | 'setup' | 'relationships' | 'results';
 
@@ -24,6 +25,7 @@ function goToResults() {
 function resetToDefaults() {
   store.resetToDefaults();
   resetChartPrefs();
+  resetCardPrefs();
 }
 
 function exportJson() {
@@ -40,7 +42,7 @@ function onImportJson(e: Event) {
     try {
       const data = JSON.parse(String(reader.result ?? ''));
       const ok = window.confirm(
-        'This will replace all current guests, tables, and groups with the contents of this file. Continue?',
+        'This will replace all current guests, tables, groups, and any accepted seating with the contents of this file. Continue?',
       );
       if (ok) store.importState(data);
     } catch {

@@ -3,18 +3,22 @@ const CHART_PREFS_KEY = 'wedding-chart-prefs-v1';
 export interface ChartPrefs {
   title: string;
   fontKey: string;
+  contentFontSizePt: number;
   primaryColor: string;
   secondaryColor: string;
   backgroundColor: string;
+  watermarkUnlocked: boolean;
 }
 
 export function defaultChartPrefs(): ChartPrefs {
   return {
     title: 'Seating Chart',
     fontKey: 'georgia',
+    contentFontSizePt: 11,
     primaryColor: '#8b5e3c',
     secondaryColor: '#c4956a',
     backgroundColor: '#ffffff',
+    watermarkUnlocked: false,
   };
 }
 
